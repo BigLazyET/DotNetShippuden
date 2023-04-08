@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:View="clr-namespace:ETLab_MauiPlainPureMode.Controls"
+             xmlns:viewModel="clr-namespace:ETLab_MauiPlainPureMode.ViewModels"
+             x:Class="ETLab_MauiPlainPureMode.MainPage">
+
+    <ContentPage.BindingContext>
+        <viewModel:MainViewModel />
+    </ContentPage.BindingContext>
+
+    <StackLayout>
+        <Label Text="页面导航" HorizontalOptions="CenterAndExpand" HorizontalTextAlignment="Center" />
+        <CollectionView x:Name="collectionView" SelectionMode="Single"
+                        ItemsSource="{Binding PageNavigations}" 
+                        SelectionChangedCommand="{Binding PageSelectedCommand}"
+                        SelectionChangedCommandParameter="{Binding Source={Reference collectionView},Path=SelectedItem}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout HeightRequest="50">
+                        <Label Text="{Binding PageName}" VerticalOptions="CenterAndExpand" VerticalTextAlignment="Center" />
+                    </StackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </StackLayout>
+</ContentPage>

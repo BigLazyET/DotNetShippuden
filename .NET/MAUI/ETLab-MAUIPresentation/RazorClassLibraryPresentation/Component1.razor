@@ -1,0 +1,14 @@
+﻿@inject ExampleJsInterop JsInterop;
+
+<div class="my-component">
+    This component is defined in the <strong>RazorClassLibraryPresentation</strong> library.
+
+    <button class="btn btn-primary" @onclick="Greeting">Click me</button>
+</div>
+
+@code {
+    private async void Greeting()
+    {
+        await JsInterop.Prompt("Hello World");
+    }
+}

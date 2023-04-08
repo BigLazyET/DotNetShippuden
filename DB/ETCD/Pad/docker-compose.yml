@@ -1,0 +1,35 @@
+version: "3"
+
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+    Etcd:
+        image: 'bitnami/etcd:latest'
+        environment:
+          - ALLOW_NONE_AUTHENTICATION=yes
+          - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+        ports:
+          - 2379:2379
+          - 2380:2380
+        networks:
+          - app-tier
+    api:
+        image: etcdpad/api:latest
+        ports:
+          - "8989:8989"
+        networks:
+          - app-tier
+        command: ["-port", "8989", "-stdout", "true"]
+    web:
+        image: etcdpad/web:latest
+        ports:
+          - "12379:12379"
+        depends_on:
+          - api
+        networks:
+          - app-tier
+        environment:
+            ETCDPAD_LISTEN: 12379
+            ETCDPAD_API_HOST: api:8989

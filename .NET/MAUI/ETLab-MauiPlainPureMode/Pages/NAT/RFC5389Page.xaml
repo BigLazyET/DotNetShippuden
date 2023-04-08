@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModel="clr-namespace:ETLab_MauiPlainPureMode.ViewModels"
+             x:Class="ETLab_MauiPlainPureMode.Pages.RFC5389Page"
+             Title="RFC5389Page">
+
+    <ContentPage.BindingContext>
+        <viewModel:RFC5389ViewModel />
+    </ContentPage.BindingContext>
+
+    <VerticalStackLayout Margin="10">
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Border.Content>
+                <Picker x:Name="picker"
+                        VerticalOptions="CenterAndExpand"
+                        CharacterSpacing="1"
+                        Title="选择一个STUN Server"
+                        SelectedItem="{Binding SelectedStunServer}"
+                        ItemsSource="{Binding STUNServers}">
+                </Picker>
+            </Border.Content>
+        </Border>
+        <Label Text="Binding Test"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NatCheck5389Outcome.BindingTest}" />
+        </Border>
+        <Label Text="Mapping Behavior"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NatCheck5389Outcome.MappingBehavior}" />
+        </Border>
+        <Label Text="Filtering Behavior"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NatCheck5389Outcome.FilteringBehavior}" />
+        </Border>
+        <Label Text="Local IPEndPoint"
+               Margin="0,15,0,5" />
+        <!--<Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NatCheck5389Outcome.LocalIPEndPoint}" />
+        </Border>-->
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Border.Content>
+                <Picker VerticalOptions="CenterAndExpand"
+                        CharacterSpacing="1"
+                        SelectedItem="{Binding SelectedLocalEndPoint}"
+                        ItemsSource="{Binding LocalEndPoints}">
+                </Picker>
+            </Border.Content>
+        </Border>
+        <Label Text="Actual Local IPEndPoint"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NatCheck5389Outcome.ActualLocalIPEndPoint}" />
+        </Border>
+        <Label Text="Public IPEndPoint"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NatCheck5389Outcome.PublicIPEndPoint}" />
+        </Border>
+        <Button Text="Test"
+                Margin="0,20,0,0"
+                VerticalOptions="EndAndExpand"
+                Command="{Binding CheckNatTypeCommand}" />
+    </VerticalStackLayout>
+</ContentPage>

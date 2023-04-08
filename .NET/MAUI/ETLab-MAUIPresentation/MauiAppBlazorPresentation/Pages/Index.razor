@@ -1,0 +1,34 @@
+﻿@page "/"
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<p>@platform</p>
+
+<Component1/>
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+@code {
+    private string platform;
+
+    protected override Task OnInitializedAsync()
+    {
+        if (DeviceInfo.Current.Platform == DevicePlatform.Android)
+            platform = "I am on Android";
+        else if (DeviceInfo.Current.Platform == DevicePlatform.iOS)
+            platform = "I am on iOS";
+        else if (DeviceInfo.Current.Platform == DevicePlatform.WinUI)
+            platform = "I am on Windows";
+
+        return base.OnInitializedAsync();
+    }
+
+    protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        
+
+        return base.OnAfterRenderAsync(firstRender);
+    }
+}
