@@ -1,0 +1,21 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{A8E09A23-12B6-4365-9D2F-2045A9AC9ABA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PfConsole", "src\PfConsole\PfConsole.csproj", "{CE1DE07D-4008-4E92-AC5F-105E33CF7748}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CE1DE07D-4008-4E92-AC5F-105E33CF7748} = {A8E09A23-12B6-4365-9D2F-2045A9AC9ABA}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE1DE07D-4008-4E92-AC5F-105E33CF7748}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE1DE07D-4008-4E92-AC5F-105E33CF7748}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE1DE07D-4008-4E92-AC5F-105E33CF7748}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE1DE07D-4008-4E92-AC5F-105E33CF7748}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
