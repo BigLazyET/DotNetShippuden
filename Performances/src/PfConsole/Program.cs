@@ -5,7 +5,10 @@ using System.Runtime.InteropServices;
 
 // PointerHello();
 // IntPtrHello();
-SpanHello2();
+// SpanHello2();
+// SpanArrays();
+// MemoryArrays();
+
 
 Console.WriteLine("Hello, World!");
 Console.ReadLine();
@@ -89,6 +92,44 @@ void SpanHello2()
     Console.WriteLine($"{nameof(SpanHello)} unmanaged sum is {sum3}");
     
     Marshal.FreeHGlobal(fooSpan.FooIntPtr);
+}
+
+void SpanArrays()
+{
+    var arr1 = new[] { 1, 2, 3, 6, 7, 8, 9, 10 };
+    var slice = new Span<int>(arr1, 2, 3);
+    foreach (var item in slice)
+    {
+        Console.WriteLine($"{nameof(SpanArrays)} {item}");
+    }
+}
+
+void MemoryArrays()
+{
+    var countries = ExtractStrings("India Belgium Australia USA UK Netherlands.".AsMemory());
+    foreach (var country in countries)
+    {
+        Console.WriteLine(country);
+    }
+}
+
+static IEnumerable<ReadOnlyMemory <char>> ExtractStrings(ReadOnlyMemory<char> c)
+{
+    // 异步方法和【迭代器】会被编译器转换为状态机，这些状态机的实例是分配在堆上的。
+    // 限制：由于 Span<T> 是 ByRef (仅堆栈类型，仅在栈上分配) 类型 必须在栈上分配，将其用于异步方法或迭代器会导致其被分配到堆上，违反其设计原则。所以这里要用memory
+    int index = 0, length = c.Length;
+    for (int i = 0; i < length; i++)
+    {
+        if (char.IsWhiteSpace(c.Span[i]))
+        {
+            yield return c[index..i];
+            index = i + 1;
+        }
+        else if (i == length - 1)
+        {
+            yield return c[index..];
+        }
+    }
 }
 
 readonly ref struct FooSpan(Span<byte> span2, Span<byte> span3, IntPtr nativeMemory)
