@@ -1,5 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
 // 学习链接：https://www.cnblogs.com/whuanle/p/17837034.html
+// 消费者，生产者，交换器，队列，路由键，绑定，Qos，拒绝接收
+// 消息优先级，延迟队列，死信队列，DLX死信交换器，
+// 消息持久化，消息确认机制，消息重试机制，队列TTL时间，消息TTL时间
+// 事务机制，发送方确认机制
 
 using System.Text;
 using RabbitMQ.Client;
@@ -10,7 +14,7 @@ using SmashRabbitMq;
 // await MqBasicConsumer();
 // await MqAckFasle();
 
-await MqFooChainTest();
+await MqFooChainTestFanout();
     
 
 Console.WriteLine("Ending...");
@@ -111,7 +115,7 @@ async Task MqAckFasle()
     }
 }
 
-async Task MqFooChainTest()
+async Task MqFooChainTestFanout()
 {
     var mqExchange = new MqFooChain();
     await mqExchange.InitAsync();
@@ -134,5 +138,38 @@ async Task MqFooChainTest()
 
     await mqExchange.TestPublishAsync("fooEx", string.Empty, 10);
     await mqExchange.TestPublishAsync("barEx", string.Empty, 100);
+}
+
+async Task MqFooChainTestTopic()
+{
+    var mqExchange = new MqFooChain();
+    await mqExchange.InitAsync();
+    mqExchange.WithNodeDeclare(config =>
+    {
+        config.AddOption(new NodeDeclareOption(NodeDeclareType.Exchange, "b1", ExchangeType.Topic))
+            .AddOption(new NodeDeclareOption(NodeDeclareType.Exchange, "b2", ExchangeType.Topic))
+            .AddOption(new NodeDeclareOption(NodeDeclareType.Exchange, "b3", ExchangeType.Topic))
+            .AddOption(new NodeDeclareOption(NodeDeclareType.Queue, "q1"))
+            .AddOption(new NodeDeclareOption(NodeDeclareType.Queue, "q2"));
+    }).WithNodeBind(new List<Node>
+    {
+        new() { BindFrom = "b1", BindTo = "q1", Type = NodeBindType.Queue, RoutingKey = "fruit.*" },
+        new() { BindFrom = "b2", BindTo = "q2", Type = NodeBindType.Queue, RoutingKey = "veg.#" },
+        new() { BindFrom = "b2", BindTo = "b3", Type = NodeBindType.Exchange, RoutingKey = "fruit.apple.#" },
+        new() { BindFrom = "b3", BindTo = "q1", Type = NodeBindType.Queue, RoutingKey = "fruit.apple.red.*.*" },
+    });
+
+    await mqExchange.BuildAsync();
+
+    await mqExchange.TestPublishAsync("b1", string.Empty, 2, "fruit.");
+    await mqExchange.TestPublishAsync("b1", string.Empty, 2, "fruit.banan.");
+    await mqExchange.TestPublishAsync("b1", string.Empty, 2, "meat.");
+    await mqExchange.TestPublishAsync("b2", string.Empty, 3, "veg.");
+    await mqExchange.TestPublishAsync("b2", string.Empty, 3, "veg.tomato.");
+    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple");
+    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.");
+    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.red.");
+    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.yellow.");
+    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.red.yellow.");
 }
 

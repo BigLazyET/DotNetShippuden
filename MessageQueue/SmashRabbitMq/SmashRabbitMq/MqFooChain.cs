@@ -5,7 +5,8 @@ namespace SmashRabbitMq;
 
 public sealed class MqFooChain : IDisposable, IAsyncDisposable
 {
-    private IConnection _connection;
+    private IConnection _producerConnection;
+    private IConnection _consumerConnection;
     private IChannel _producer;
     private IChannel _consumer;
 
@@ -15,20 +16,22 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
     public async Task InitAsync()
     {
         var connectionFactory = new ConnectionFactory { HostName = "localhost" };
-        _connection = await connectionFactory.CreateConnectionAsync();
-        _producer = await _connection.CreateChannelAsync();
-        _consumer = await _connection.CreateChannelAsync();
+        _producerConnection = await connectionFactory.CreateConnectionAsync();
+        _consumerConnection = await connectionFactory.CreateConnectionAsync();
+        _producer = await _producerConnection.CreateChannelAsync();
+        _consumer = await _consumerConnection.CreateChannelAsync();
 
         _nodeLinkedList = new SinglyLinkedList<IList<Node>>();
         _nodeDeclareConfig = new NodeDeclareConfig();
     }
 
-    public async Task TestPublishAsync(string exchangeName, string routingKey, int count)
+    public async Task TestPublishAsync(string exchangeName, string routingKey, int count, string prefix = "")
     {
         foreach (var item in Enumerable.Range(0, count))
         {
+            var body = string.IsNullOrWhiteSpace(prefix) ?  Encoding.UTF8.GetBytes($"{exchangeName}_{item}") : Encoding.UTF8.GetBytes($"{prefix}.{item}");
             await _producer.BasicPublishAsync(exchange: exchangeName, routingKey: routingKey, mandatory: false,
-                body: Encoding.UTF8.GetBytes($"{exchangeName}_{item}"));
+                body: body);
         }
     }
 
@@ -49,7 +52,7 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
         foreach (var option in _nodeDeclareConfig.Options)
         {
             if (option.DeclareType == NodeDeclareType.Exchange)
-                await _producer.ExchangeDeclareAsync(exchange: option.NodeName, type: ExchangeType.Fanout,
+                await _producer.ExchangeDeclareAsync(exchange: option.NodeName, type: option.ExchangeType,
                     durable: option.Durable, autoDelete: option.AutoDelete);
             else
                 await _producer.QueueDeclareAsync(queue: option.NodeName, exclusive: option.Exclusive,
@@ -72,14 +75,16 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
 
     public void Dispose()
     {
-        _connection.Dispose();
+        _producerConnection.Dispose();
+        _consumerConnection.Dispose();
         _producer.Dispose();
         _consumer.Dispose();
     }
 
     public async ValueTask DisposeAsync()
     {
-        await _connection.DisposeAsync();
+        await _producerConnection.DisposeAsync();
+        await _consumerConnection.DisposeAsync();
         await _producer.DisposeAsync();
         await _consumer.DisposeAsync();
     }
@@ -88,6 +93,7 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
 public record struct NodeDeclareOption(
     NodeDeclareType DeclareType,
     string NodeName,
+    string ExchangeType = ExchangeType.Fanout,
     bool Durable = false,
     bool Exclusive = false,
     bool AutoDelete = false);
