@@ -1,5 +1,6 @@
 using System.Text;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 namespace SmashRabbitMq;
 
@@ -7,8 +8,9 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
 {
     private IConnection _producerConnection;
     private IConnection _consumerConnection;
-    private IChannel _producer;
-    private IChannel _consumer;
+    private IChannel _producerChannel;
+    public IChannel consumerChannel;
+    public AsyncEventingBasicConsumer consumer;
 
     private SinglyLinkedList<IList<Node>> _nodeLinkedList;
     private NodeDeclareConfig _nodeDeclareConfig; // 都可以通过依赖注入，但是为了简单直接新建实例
@@ -18,19 +20,22 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
         var connectionFactory = new ConnectionFactory { HostName = "localhost" };
         _producerConnection = await connectionFactory.CreateConnectionAsync();
         _consumerConnection = await connectionFactory.CreateConnectionAsync();
-        _producer = await _producerConnection.CreateChannelAsync();
-        _consumer = await _consumerConnection.CreateChannelAsync();
+        _producerChannel = await _producerConnection.CreateChannelAsync();
+        consumerChannel = await _consumerConnection.CreateChannelAsync();
+        consumer = new AsyncEventingBasicConsumer(consumerChannel);
 
         _nodeLinkedList = new SinglyLinkedList<IList<Node>>();
         _nodeDeclareConfig = new NodeDeclareConfig();
     }
 
-    public async Task TestPublishAsync(string exchangeName, string routingKey, int count, string prefix = "")
+    public async Task TestPublishAsync(string exchangeName, string routingKey, int count, bool attach = false)
     {
         foreach (var item in Enumerable.Range(0, count))
         {
-            var body = string.IsNullOrWhiteSpace(prefix) ?  Encoding.UTF8.GetBytes($"{exchangeName}_{item}") : Encoding.UTF8.GetBytes($"{prefix}.{item}");
-            await _producer.BasicPublishAsync(exchange: exchangeName, routingKey: routingKey, mandatory: false,
+            if (!string.IsNullOrWhiteSpace(routingKey) && attach)
+                routingKey = $"{routingKey}.{item}";
+            var body = string.IsNullOrWhiteSpace(routingKey) ?  Encoding.UTF8.GetBytes($"{exchangeName}-{item}") : Encoding.UTF8.GetBytes($"{exchangeName}-{routingKey}");
+            await _producerChannel.BasicPublishAsync(exchange: exchangeName, routingKey: routingKey, mandatory: false,
                 body: body);
         }
     }
@@ -52,10 +57,10 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
         foreach (var option in _nodeDeclareConfig.Options)
         {
             if (option.DeclareType == NodeDeclareType.Exchange)
-                await _producer.ExchangeDeclareAsync(exchange: option.NodeName, type: option.ExchangeType,
+                await _producerChannel.ExchangeDeclareAsync(exchange: option.NodeName, type: option.ExchangeType,
                     durable: option.Durable, autoDelete: option.AutoDelete);
             else
-                await _producer.QueueDeclareAsync(queue: option.NodeName, exclusive: option.Exclusive,
+                await _producerChannel.QueueDeclareAsync(queue: option.NodeName, exclusive: option.Exclusive,
                     durable: option.Durable, autoDelete: option.AutoDelete);
         }
 
@@ -64,10 +69,10 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
             foreach (var node in nodes)
             {
                 if (node.Type == NodeBindType.Exchange)
-                    await _producer.ExchangeBindAsync(source: node.BindFrom, destination: node.BindTo,
+                    await _producerChannel.ExchangeBindAsync(source: node.BindFrom, destination: node.BindTo,
                         routingKey: node.RoutingKey);
                 else
-                    await _producer.QueueBindAsync(exchange: node.BindFrom, queue: node.BindTo,
+                    await _producerChannel.QueueBindAsync(exchange: node.BindFrom, queue: node.BindTo,
                         routingKey: node.RoutingKey);
             }
         }
@@ -77,16 +82,16 @@ public sealed class MqFooChain : IDisposable, IAsyncDisposable
     {
         _producerConnection.Dispose();
         _consumerConnection.Dispose();
-        _producer.Dispose();
-        _consumer.Dispose();
+        _producerChannel.Dispose();
+        consumerChannel.Dispose();
     }
 
     public async ValueTask DisposeAsync()
     {
         await _producerConnection.DisposeAsync();
         await _consumerConnection.DisposeAsync();
-        await _producer.DisposeAsync();
-        await _consumer.DisposeAsync();
+        await _producerChannel.DisposeAsync();
+        await consumerChannel.DisposeAsync();
     }
 }
 
@@ -96,7 +101,8 @@ public record struct NodeDeclareOption(
     string ExchangeType = ExchangeType.Fanout,
     bool Durable = false,
     bool Exclusive = false,
-    bool AutoDelete = false);
+    bool AutoDelete = false,
+    IDictionary<string,string>? Arguments = null);
 
 public class NodeDeclareConfig
 {

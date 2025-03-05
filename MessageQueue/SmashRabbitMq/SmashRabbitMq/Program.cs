@@ -15,7 +15,7 @@ using SmashRabbitMq;
 // await MqAckFasle();
 
 await MqFooChainTestFanout();
-    
+
 
 Console.WriteLine("Ending...");
 Console.ReadLine();
@@ -44,7 +44,7 @@ async Task MqBasicProducer()
 
     var array = Enumerable.Range(0, 10).ToArray();
     var memory = new ReadOnlyMemory<int>(array);
-    
+
     foreach (var i in array)
     {
         await channel.BasicPublishAsync(
@@ -70,7 +70,7 @@ async Task MqBasicConsumer()
     await channel.BasicConsumeAsync(queue: "FooQueue", autoAck: false, consumer: consumer);
     return;
 
-    
+
     async Task ConsumerOnReceivedAsync(object sender, BasicDeliverEventArgs @event)
     {
         var message = Encoding.UTF8.GetString(@event.Body.Span);
@@ -87,7 +87,7 @@ async Task MqAckFasle()
     var connection = await connectionFactory.CreateConnectionAsync();
     var channel = await connection.CreateChannelAsync();
 
-    foreach (var item in Enumerable.Range(0,10))
+    foreach (var item in Enumerable.Range(0, 10))
     {
         await channel.BasicPublishAsync(exchange: string.Empty, routingKey: "FooQueue", mandatory: false,
             body: Encoding.UTF8.GetBytes($"测试AckFasle{item}"));
@@ -109,7 +109,7 @@ async Task MqAckFasle()
         // multiple: false：这个参数表示是否批量确认。如果设为 false，则只确认指定的单条消息。如果设为 true，则会确认所有小于或等于 deliveryTag 的消息。
         if (cid % 2 == 0)
             await channel.BasicAckAsync(deliveryTag: @event.DeliveryTag, multiple: false);
-        
+
         // if (cid == 30)
         //     await channel.DisposeAsync();
     }
@@ -161,15 +161,49 @@ async Task MqFooChainTestTopic()
 
     await mqExchange.BuildAsync();
 
-    await mqExchange.TestPublishAsync("b1", string.Empty, 2, "fruit.");
-    await mqExchange.TestPublishAsync("b1", string.Empty, 2, "fruit.banan.");
-    await mqExchange.TestPublishAsync("b1", string.Empty, 2, "meat.");
-    await mqExchange.TestPublishAsync("b2", string.Empty, 3, "veg.");
-    await mqExchange.TestPublishAsync("b2", string.Empty, 3, "veg.tomato.");
-    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple");
-    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.");
-    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.red.");
-    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.yellow.");
-    await mqExchange.TestPublishAsync("b2", string.Empty, 5, "fruit.apple.red.yellow.");
+    await mqExchange.TestPublishAsync("b1", count: 2, attach: true, routingKey: "fruit.");
+    await mqExchange.TestPublishAsync("b1", count: 2, attach: true, routingKey: "fruit.banan.");
+    await mqExchange.TestPublishAsync("b1", count: 2, attach: true, routingKey: "meat.");
+    await mqExchange.TestPublishAsync("b2", count: 3, attach: true, routingKey: "veg.");
+    await mqExchange.TestPublishAsync("b2", count: 3, attach: true, routingKey: "veg.tomato.");
+    await mqExchange.TestPublishAsync("b2", count: 5, attach: true, routingKey: "fruit.apple");
+    await mqExchange.TestPublishAsync("b2", count: 5, attach: true, routingKey: "fruit.apple.");
+    await mqExchange.TestPublishAsync("b2", count: 5, attach: true, routingKey: "fruit.apple.red.");
+    await mqExchange.TestPublishAsync("b2", count: 5, attach: true, routingKey: "fruit.apple.yellow.");
+    await mqExchange.TestPublishAsync("b2", count: 5, attach: true, routingKey: "fruit.apple.red.yellow.");
 }
 
+async Task MqDlxTest()
+{
+    var mqExchange = new MqFooChain();
+    await mqExchange.InitAsync();
+    mqExchange.WithNodeDeclare(config =>
+    {
+        config.AddOption(new NodeDeclareOption(NodeDeclareType.Exchange, "c1_bak", ExchangeType.Direct))
+            .AddOption(new NodeDeclareOption(NodeDeclareType.Exchange, "c1", ExchangeType.Direct,
+                Arguments: new Dictionary<string, string> { { "x-dead-letter-exchange", "c1_bak" } }))
+            .AddOption(new NodeDeclareOption(NodeDeclareType.Queue, "c1q"))
+            .AddOption(new NodeDeclareOption(NodeDeclareType.Queue, "c1_bakq"));
+    }).WithNodeBind(new List<Node>
+    {
+        new() { BindFrom = "c1", BindTo = "c1q", Type = NodeBindType.Queue, RoutingKey = "car.order" },
+        new() { BindFrom = "c1_bak", BindTo = "c1_bakq", Type = NodeBindType.Queue, RoutingKey = "car.order.delay" }
+    });
+
+    await mqExchange.BuildAsync();
+
+    await mqExchange.TestPublishAsync("c1", "car.order", 20);
+    await mqExchange.TestPublishAsync("c1", "car.order", 20);
+    
+    var cid = 0;
+    mqExchange.consumer.ReceivedAsync += ConsumerOnReceivedAsync;
+    await mqExchange.consumerChannel.BasicConsumeAsync("c1q", false, mqExchange.consumer);
+    return;
+    
+    async Task ConsumerOnReceivedAsync(object sender, BasicDeliverEventArgs @event)
+    {
+        if (cid % 2 == 0)
+            await mqExchange.consumerChannel.BasicRejectAsync(@event.DeliveryTag, false);
+        cid++;
+    }
+}
