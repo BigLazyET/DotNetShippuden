@@ -1,0 +1,57 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+#        endpoint: ${INSIP}:4317
+      http:
+#        endpoint: ${INSIP}:4318
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 300
+    spike_limit_mib: 200
+
+  batch:
+    timeout: 1s
+
+  tail_sampling:
+    decision_wait: 1s
+    num_traces: 10000
+    expected_new_traces_per_sec: 0
+    policies:
+      [
+        {
+          name: policy-1,
+          type: numeric_attribute,
+          numeric_attribute:
+            { key: sampling.priority, min_value: 1, max_value: 1 },
+        },
+      ]
+
+
+exporters:
+  debug:
+    verbosity: detailed
+
+  otlp:
+    endpoint: localhost:4319
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces/otlp:
+      receivers: [otlp]
+      processors: [memory_limiter, tail_sampling, batch]
+      exporters: [otlp]
+
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp]
+
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlp]

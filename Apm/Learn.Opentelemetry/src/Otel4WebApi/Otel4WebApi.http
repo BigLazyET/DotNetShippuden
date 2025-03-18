@@ -1,0 +1,6 @@
+@Otel4WebApi_HostAddress = http://localhost:5243
+
+GET {{Otel4WebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
