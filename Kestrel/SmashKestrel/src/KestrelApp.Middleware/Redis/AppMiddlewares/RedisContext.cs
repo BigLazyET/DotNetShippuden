@@ -1,6 +1,9 @@
+using KestrelApp.Common;
+using Microsoft.AspNetCore.Http.Features;
+
 namespace KestrelApp.Middleware.Redis;
 
-public class RedisContext
+sealed class RedisContext : ApplicationContext
 {
     public RedisClient Client { get; }
     
@@ -8,7 +11,7 @@ public class RedisContext
     
     public RedisResponse Response { get; }
 
-    public RedisContext(RedisClient client, RedisRequest request, RedisResponse response)
+    public RedisContext(RedisClient client, RedisRequest request, RedisResponse response, IFeatureCollection features) : base(features)
     {
         Client = client;
         Request = request;

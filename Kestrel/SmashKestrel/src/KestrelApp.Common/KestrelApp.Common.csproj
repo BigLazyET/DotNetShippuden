@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <!--        Microsoft.AspNetCore.App 是一个框架包，包含了 ASP.NET Core 和 Entity Framework Core 的常用组件。-->
+        <!--        使用 <FrameworkReference> 可以引用共享框架而不需要单独添加每个库的包引用-->
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+</Project>

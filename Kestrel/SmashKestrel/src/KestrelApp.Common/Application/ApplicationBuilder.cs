@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace KestrelApp.Middleware.Redis.AppMiddlewares;
+namespace KestrelApp.Common;
 
 public class ApplicationBuilder<TContext>
 {
@@ -22,7 +22,7 @@ public class ApplicationBuilder<TContext>
     {
         var handler = fallbackHandler;
         // 中间件需要从前往后执行，所以嵌套需要从后往前嵌套
-        for (int i = middlewares.Count - 1; i > 0; i--)
+        for (var i = middlewares.Count - 1; i > 0; i--)
         {
             handler = middlewares[i](fallbackHandler);
         }

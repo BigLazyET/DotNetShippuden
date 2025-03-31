@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Http.Features;
 
-namespace KestrelApp.Middleware.Redis.AppMiddlewares;
+namespace KestrelApp.Common;
 
 /// <summary>
 /// 应用请求上下文

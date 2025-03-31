@@ -1,3 +1,5 @@
+
+using KestrelApp.Common;
 using Microsoft.AspNetCore.Connections;
 
 namespace KestrelApp.Middleware.Redis;
@@ -15,15 +17,26 @@ namespace KestrelApp.Middleware.Redis;
 /// </summary>
 public class RedisConnectionHandler : ConnectionHandler
 {
+    private ApplicationDelegate<RedisContext> application;
+
+    public RedisConnectionHandler(IServiceProvider serviceProvider)
+    {
+        application = new ApplicationBuilder<RedisContext>(serviceProvider)
+            .Use<AuthMiddleware>()
+            .Use<CmdMiddleware>()
+            .Use<FallbackMiddleware>()
+            .Build();
+    }
+    
     /// <summary>
     /// 处理Redis连接
     /// </summary>
-    /// <param name="connection">ConnectionContext是kestrel的一个Tcp连接抽象，其核心属性是Transport，表示双工传输层的操作对象，另外提供Abort()方法用于服务端主动关闭连接</param>
-    public override async Task OnConnectedAsync(ConnectionContext connection)
+    /// <param name="context">可以理解为传输层的Context: ConnectionContext是kestrel的一个Tcp连接抽象，其核心属性是Transport，表示双工传输层的操作对象，另外提供Abort()方法用于服务端主动关闭连接</param>
+    public override async Task OnConnectedAsync(ConnectionContext context)
     {
         try
         {
-
+            await HandleRequestAsync(context);
         }
         catch (Exception e)
         {
@@ -31,22 +44,22 @@ public class RedisConnectionHandler : ConnectionHandler
         }
         finally
         {
-            await connection.DisposeAsync();
+            await context.DisposeAsync();
         }
     }
 
     /// <summary>
     /// 处理Redis请求
     /// </summary>
-    /// <param name="connection"></param>
-    private async Task HandleRequestAsync(ConnectionContext connection)
+    /// <param name="contextion"></param>
+    private async Task HandleRequestAsync(ConnectionContext context)
     {
-        var duplexPipe = connection.Transport;
+        var duplexPipe = context.Transport;
         var input = duplexPipe.Input;
-        var client = new RedisClient(connection);
+        var client = new RedisClient(context);
         var response = new RedisResponse(duplexPipe.Output);
 
-        while (connection.ConnectionClosed.IsCancellationRequested == false)
+        while (context.ConnectionClosed.IsCancellationRequested == false)
         {
             var result = await input.ReadAsync();
             if (result.IsCanceled)
@@ -57,8 +70,10 @@ public class RedisConnectionHandler : ConnectionHandler
             {
                 foreach (var request in requests)
                 {
-                    var context = new RedisContext(client, request, response);
+                    // 应用层的context: RedisContext
+                    var redisContext = new RedisContext(client, request, response, context.Features);
                     // 传到应用层的中间件去做进一步处理
+                    await application.Invoke(redisContext);
                 }
                 input.AdvanceTo(consumed);
             }

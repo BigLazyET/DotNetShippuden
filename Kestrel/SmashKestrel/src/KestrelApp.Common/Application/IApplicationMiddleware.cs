@@ -1,4 +1,4 @@
-namespace KestrelApp.Middleware.Redis.AppMiddlewares;
+namespace KestrelApp.Common;
 
 /// <summary>
 /// 应用程序中间件接口

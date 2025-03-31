@@ -12,9 +12,27 @@ public class RedisRequest
 {
     private readonly List<RedisValue> Values = new();
     
+    /// <summary>
+    /// 数据包大小
+    /// </summary>
     public int Size { get; private set; }
     
+    /// <summary>
+    /// 命令名称
+    /// </summary>
     public RedisCmd Cmd { get; private set; }
+
+    public int ArgumentCount => Values.Count - 1;   // 将Cmd 比如：LPUSH排除在外; 只有mylist value是参数
+
+    /// <summary>
+    /// 获取命令参数
+    /// </summary>
+    /// <param name="index">索引值</param>
+    /// <returns></returns>
+    public RedisValue Argument(int index)
+    {
+        return Values[index + 1];
+    }
     
     public static IList<RedisRequest> Parse(ReadOnlySequence<byte> buffer, out SequencePosition consumed)
     {

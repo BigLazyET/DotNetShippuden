@@ -1,4 +1,4 @@
-namespace KestrelApp.Middleware.Redis.AppMiddlewares;
+namespace KestrelApp.Common;
 
 /// <summary>
 /// 可以处理请求的委托
