@@ -8,7 +8,6 @@ abstract class ResponseContent
 
     public static ResponseContent Err { get; } = new StringContent("+ERR\r\n");
     
-    
     public static ResponseContent Pong { get; } = new StringContent("+PONG\r\n");
 
     public abstract ReadOnlyMemory<byte> ToMemory();
