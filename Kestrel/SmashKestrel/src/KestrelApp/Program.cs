@@ -1,4 +1,5 @@
 using System.Net;
+using KestrelApp.Middleware.Echo;
 using KestrelApp.Middleware.Redis;
 using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -13,8 +14,10 @@ builder.WebHost.ConfigureKestrel((WebHostBuilderContext context, KestrelServerOp
     // 使用配置，可以很方便的配置多种协议: 一个端口一种协议的要求，如下示例所示
     var kestrelSection = context.Configuration.GetSection("Kestrel");
     options.Configure(kestrelSection)
-           .Endpoint("Redis", (EndpointConfiguration endpoint) => endpoint.ListenOptions.UseRedis());
-    
+        .Endpoint(IPAddress.Parse("127.0.0.1"), 8945)
+        .Endpoint("Echo", (endpoint) => endpoint.ListenOptions.UseEcho())
+        .Endpoint("Redis", (EndpointConfiguration endpoint) => endpoint.ListenOptions.UseRedis());
+
     // 手动配置
     // options.Configure().Endpoint(IPAddress.Parse("127.0.0.1"), 5007, listenOptions =>
     // {
@@ -27,8 +30,7 @@ app.UseRouting();
 
 app.Map("/", async context =>
 {
-    context.Response.ContentType = "text/html";
-    await context.Response.SendFileAsync("telnet-websocket.html");
+    await context.Response.WriteAsync("Hello World");
 });
 
 app.Run();
