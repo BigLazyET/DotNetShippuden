@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.IO.Pipelines;
+using System.IO.Pipes;
 using System.Net.Sockets;
 using System.Text;
 
@@ -22,11 +23,8 @@ var cts = new CancellationTokenSource();
 var writeTask = Task.Run(async () =>
 {
     try
-    {
-        while (!cts.Token.IsCancellationRequested)
-        {
-            await writePipe.Reader.CopyToAsync(ns, cts.Token);
-        }
+    {   
+        await writePipe.Reader.CopyToAsync(ns, cts.Token);
     }
     catch (Exception ex)
     {
@@ -42,10 +40,7 @@ var readTask = Task.Run(async () =>
 {
     try
     {
-        while (!cts.Token.IsCancellationRequested)
-        {
-            await ns.CopyToAsync(readPipe.Writer, cts.Token);
-        }
+        await ns.CopyToAsync(readPipe.Writer, cts.Token);
     }
     catch (Exception ex)
     {
@@ -73,7 +68,8 @@ var produceTask = Task.Run(async () =>
             writePipe.Writer.Advance(size);
             await writePipe.Writer.WriteAsync(bytes, cts.Token);
             await writePipe.Writer.FlushAsync(cts.Token);
-
+            Debug.WriteLine($"发送给Echo服务器的消息: {msg}");
+            
             await Task.Delay(1000, cts.Token);
         }
     }
@@ -108,7 +104,7 @@ var printTask = Task.Run(async () =>
                 var messageBytes = reader.Sequence.Slice(reader.Position, length).ToArray();
                 var msg = Encoding.UTF8.GetString(messageBytes);
                 Debug.WriteLine($"从Echo服务器返回的消息: {msg}");
-                
+
                 reader.Advance(length);
                 position = reader.Position;
                 buffer = buffer.Slice(reader.Position);
