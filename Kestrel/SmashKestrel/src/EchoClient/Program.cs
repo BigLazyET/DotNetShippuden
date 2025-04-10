@@ -2,9 +2,11 @@
 using System.Buffers.Binary;
 using System.Diagnostics;
 using System.IO.Pipelines;
-using System.IO.Pipes;
 using System.Net.Sockets;
 using System.Text;
+
+// AnonymousPipeServerStream AnonymousPipeClientStream
+// NamedPipeServerStream
 
 const string Host = "localhost";
 const int Port = 5006;
