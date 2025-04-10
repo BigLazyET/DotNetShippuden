@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KestrelApp.Common", "src\Ke
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DefaultWebApiApp", "src\DefaultWebApiApp\DefaultWebApiApp.csproj", "{A46B6D34-A35A-46B5-87F6-B1E357E7A3BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoClient", "src\EchoClient\EchoClient.csproj", "{EACF6CC9-EC54-4227-ADD1-E0D5825DE0CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,7 @@ Global
 		{692DDEA9-CED4-4AA6-AE54-F8FDF73409B3} = {676C83D7-74C4-4BB9-AD70-9D74C36AECBD}
 		{23AF83EE-5C24-4F91-80AE-4B5C176352E4} = {676C83D7-74C4-4BB9-AD70-9D74C36AECBD}
 		{A46B6D34-A35A-46B5-87F6-B1E357E7A3BD} = {676C83D7-74C4-4BB9-AD70-9D74C36AECBD}
+		{EACF6CC9-EC54-4227-ADD1-E0D5825DE0CB} = {676C83D7-74C4-4BB9-AD70-9D74C36AECBD}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{8CBF4D0D-18B7-4732-AEE6-4E204EA196E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -38,5 +41,9 @@ Global
 		{A46B6D34-A35A-46B5-87F6-B1E357E7A3BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A46B6D34-A35A-46B5-87F6-B1E357E7A3BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A46B6D34-A35A-46B5-87F6-B1E357E7A3BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EACF6CC9-EC54-4227-ADD1-E0D5825DE0CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EACF6CC9-EC54-4227-ADD1-E0D5825DE0CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EACF6CC9-EC54-4227-ADD1-E0D5825DE0CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EACF6CC9-EC54-4227-ADD1-E0D5825DE0CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

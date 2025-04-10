@@ -1,11 +1,13 @@
 using System.Net;
 using KestrelApp.Middleware.Echo;
+using KestrelApp.Middleware.HttpProxy;
+using KestrelApp.Middleware.HttpProxy.Extensions;
 using KestrelApp.Middleware.Redis;
 using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddRedis();
+builder.Services.AddHttpProxy().AddRedis();
 
 // configure kestrel middlewares
 // 可以让kestrel使用一个端口支持多种协议或多协议一个端口一种协议的要求
@@ -15,6 +17,7 @@ builder.WebHost.ConfigureKestrel((WebHostBuilderContext context, KestrelServerOp
     var kestrelSection = context.Configuration.GetSection("Kestrel");
     options.Configure(kestrelSection)
         .Endpoint(IPAddress.Parse("127.0.0.1"), 8945)
+        .Endpoint("HttpProxy", endpoint => endpoint.ListenOptions.UseHttpProxy())
         .Endpoint("Echo", (endpoint) => endpoint.ListenOptions.UseEcho())
         .Endpoint("Redis", (EndpointConfiguration endpoint) => endpoint.ListenOptions.UseRedis());
 
@@ -27,6 +30,9 @@ builder.WebHost.ConfigureKestrel((WebHostBuilderContext context, KestrelServerOp
 
 var app = builder.Build();
 app.UseRouting();
+
+// http代理中间件，能处理非隧道的http代理请求
+app.UseMiddleware<HttpProxyMiddleware>();
 
 app.Map("/", async context =>
 {

@@ -21,5 +21,5 @@ public interface IProxyFeature
     /// <summary>
     /// 代理认证信息
     /// </summary>
-    public AuthenticationHeaderValue? Authentication { get; }
+    public AuthenticationHeaderValue? ProxyAuthorization { get; }
 }

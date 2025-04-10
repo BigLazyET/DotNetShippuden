@@ -62,10 +62,21 @@ sealed class HttpRequestHandler : IHttpRequestLineHandler, IHttpHeadersHandler, 
     private HttpMethod _method;
     
     public HostString ProxyHost { get; private set; }
+
+
+    public ProxyProtocol ProxyProtocol
+    {
+        get
+        {
+            if (ProxyHost.HasValue == false)
+                return ProxyProtocol.None;
+            else if (_method == HttpMethod.Connect)
+                return ProxyProtocol.TunnelProxy;
+            return ProxyProtocol.HttpProxy;
+        }
+    }
     
-    public ProxyProtocol ProxyProtocol { get; private set; }
-    
-    public AuthenticationHeaderValue? Authentication { get; private set; }
+    public AuthenticationHeaderValue? ProxyAuthorization { get; private set; }
     
     /// <summary>
     /// 此方法会在HttpParse解析完请求行之后触发
@@ -93,18 +104,30 @@ sealed class HttpRequestHandler : IHttpRequestLineHandler, IHttpHeadersHandler, 
             }
         }
     }
-
-    void IHttpHeadersHandler.OnStaticIndexedHeader(int index)
+    
+    void IHttpHeadersHandler.OnHeader(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
     {
-        // 举例头部: 
+        // 举例头部:
+        // Host: example.com
+        // Proxy-Authorization: Basic dXNlcjpwYXNzd29yZA==
+        const string proxyAuthentication = "Proxy-Authorization";
+        var headerName = Encoding.ASCII.GetString(name);
+        if (proxyAuthentication.Equals(headerName, StringComparison.OrdinalIgnoreCase))
+        {
+            var headerValue = Encoding.ASCII.GetString(value);
+            if (AuthenticationHeaderValue.TryParse(headerValue, out var parsedValue))
+            {
+                ProxyAuthorization = parsedValue;
+            }
+        }
     }
 
-    void IHttpHeadersHandler.OnStaticIndexedHeader(int index, ReadOnlySpan<byte> value)
+    void IHttpHeadersHandler.OnStaticIndexedHeader(int index)
     {
         
     }
 
-    void IHttpHeadersHandler.OnHeader(ReadOnlySpan<byte> name, ReadOnlySpan<byte> value)
+    void IHttpHeadersHandler.OnStaticIndexedHeader(int index, ReadOnlySpan<byte> value)
     {
         
     }
