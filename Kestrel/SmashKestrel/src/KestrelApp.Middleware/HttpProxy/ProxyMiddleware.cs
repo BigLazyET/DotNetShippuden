@@ -30,7 +30,7 @@ sealed class ProxyMiddleware : IKestrelMiddleware
         var output = context.Transport.Output;
         var requestHandler = new HttpRequestHandler();
 
-        while (context.ConnectionClosed.IsCancellationRequested)
+        while (context.ConnectionClosed.IsCancellationRequested == false)
         {
             var result = await input.ReadAsync();
             if (result.IsCanceled)

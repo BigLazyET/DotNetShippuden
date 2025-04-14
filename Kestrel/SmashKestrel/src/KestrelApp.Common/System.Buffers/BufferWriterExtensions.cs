@@ -8,6 +8,9 @@ namespace KestrelApp.Common.System.Buffers;
 
 public static class BufferWriterExtensions
 {
+    private const byte CR = (byte)'\r';
+    private const byte LF = (byte)'\n';
+    
     public unsafe static int Write(this IBufferWriter<byte> writer, ReadOnlySpan<char> text, Encoding encoding)
     {
         if (text.IsEmpty)
@@ -33,5 +36,13 @@ public static class BufferWriterExtensions
         var span = writer.GetSpan(size);
         BinaryPrimitives.WriteUInt16BigEndian(span, value);
         writer.Advance(size);
+    }
+
+    public static void WriteCrlf(this IBufferWriter<byte> writer)
+    {
+        var span = writer.GetSpan(2);
+        span[0] = CR;
+        span[1] = LF;
+        writer.Advance(2);
     }
 }

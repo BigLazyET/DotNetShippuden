@@ -8,6 +8,8 @@ using System.Text;
 // AnonymousPipeServerStream AnonymousPipeClientStream
 // NamedPipeServerStream
 
+await Task.Delay(10000);
+
 const string Host = "localhost";
 const int Port = 5006;
 
