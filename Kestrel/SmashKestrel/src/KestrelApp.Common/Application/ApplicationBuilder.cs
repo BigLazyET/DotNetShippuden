@@ -4,7 +4,7 @@ namespace KestrelApp.Common;
 
 public class ApplicationBuilder<TContext>
 {
-    private readonly ApplicationDelegate<TContext> fallbackHandler;
+    private readonly ApplicationDelegate<TContext> _fallbackHandler;
     
     public IServiceProvider ApplicationServices { get; }
 
@@ -13,18 +13,24 @@ public class ApplicationBuilder<TContext>
     /// </summary>
     private readonly List<Func<ApplicationDelegate<TContext>, ApplicationDelegate<TContext>>> middlewares = new();
 
-    public ApplicationBuilder(IServiceProvider serviceProvider)
+    public ApplicationBuilder(IServiceProvider serviceProvider) : this(serviceProvider, context => Task.CompletedTask)
+    {
+        
+    }
+
+    public ApplicationBuilder(IServiceProvider serviceProvider, ApplicationDelegate<TContext> fallbackHandler)
     {
         ApplicationServices = serviceProvider;
+        _fallbackHandler = fallbackHandler;
     }
 
     public ApplicationDelegate<TContext> Build()
     {
-        var handler = fallbackHandler;
+        var handler = _fallbackHandler;
         // 中间件需要从前往后执行，所以嵌套需要从后往前嵌套
-        for (var i = middlewares.Count - 1; i > 0; i--)
+        for (var i = middlewares.Count - 1; i >= 0; i--)
         {
-            handler = middlewares[i](fallbackHandler);
+            handler = middlewares[i](handler);
         }
 
         return handler;

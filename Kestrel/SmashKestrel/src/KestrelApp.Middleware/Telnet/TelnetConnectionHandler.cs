@@ -11,6 +11,7 @@ namespace KestrelApp.Middleware.Telnet;
 
 public sealed class TelnetConnectionHandler : ConnectionHandler
 {
+    // Telnet 协议规定使用 `\r\n` 作为行终止符。这是为了确保在不同操作系统之间的兼容性，因为不同系统使用不同的行终止符。通过统一使用 `\r\n`，Telnet 能够在跨平台通信中保持一致性。
     private static byte[] Delimiter = Encoding.ASCII.GetBytes("\r\n");
 
     private ApplicationDelegate<TelnetContext> _application;

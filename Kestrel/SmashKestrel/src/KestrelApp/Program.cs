@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 var builder = WebApplication.CreateBuilder(args);
-builder.Services.AddConnections().AddHttpProxy().AddRedis();
+builder.Services.AddConnections().AddHttpProxy().AddTelnet().AddRedis();
 
 // configure kestrel middlewares
 // 可以让kestrel使用一个端口支持多种协议或多协议一个端口一种协议的要求
